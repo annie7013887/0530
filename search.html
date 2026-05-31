@@ -1,0 +1,122 @@
+﻿<!doctype html>
+<html lang="zh-Hant">
+<head>
+
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>站內搜尋示範</title>
+  <style>
+    body{font-family:system-ui,-apple-system,'Microsoft JhengHei',sans-serif;line-height:1.6;margin:24px}
+    .searchbar{display:flex;gap:8px;margin-bottom:16px}
+    .muted{color:#666}
+    .result{border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin:8px 0}
+    mark{background:#fff59d}
+  </style>
+  
+</head>
+<body>
+
+  <form id="site-search" class="searchbar" action="" method="get">
+    <input id="q" name="q" type="search" placeholder="站內搜尋關鍵字…" required
+           style="flex:1;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px">
+    <button type="submit" style="padding:10px 14px;border-radius:8px;border:0;background:#111827;color:#fff">
+      搜尋
+    </button>
+  </form>
+
+  <div id="meta" class="muted"></div>
+  <div id="results"></div>
+
+  
+  <section class="result" data-search>
+    <h3>心理系「韌齡心北投生活圈」計畫受邀2025高齡健康博覽會參展</h3>
+    <p>本校大學社會責任（University Social Responsibility, 以下簡稱USR）計畫「韌齡心北投生活圈」獲教育部高教司邀請，於114年8月8日至8月10日在台北市世貿中心舉辦的「2025高齡健康產業博覽會」參展。為期三天的活動吸引九萬多人參觀，包括許多中高齡民眾以及相關領域的學生也都前來參與。</p>
+  </section>
+
+  <section class="result" data-search>
+    <h3>東吳學子前進大阪萬博 展現國際交流軟實力</h3>
+    <p>本中心攜手日本語文學系吳映璇助理教授，與合作單位日本一般社團法人日本亞細亞教育研究會和株式會社吉壽屋共同合作，帶領本校8名傑出的志工同學，自114年7月1日至7月10日遠赴日本，參與這場難得的國際盛會。</p>
+  </section>
+
+  <section class="result" data-search>
+    <h3>東吳科技魂：超前部署半導體產業最前線！</h3>
+    <p>為協助學生掌握世界的核心科技，本校通識教育中心自113學年度起開設「遇見未來－創新科技半導體精英講座」課程，由科準科技股份有限公司陳調鋌(數學系65級)董事長發起、物理學系梅長生教授擔任課程主持人，攜手業界領袖，帶領學生深入探索半導體世界的奧妙與未來潛能。</p>
+  </section>
+  
+
+  <script>
+    
+    function getParam(name){
+      return new URL(location.href).searchParams.get(name) || '';
+    }
+
+    
+    function highlight(text, kw){
+      if(!kw) return text;
+      const esc = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return text.replace(new RegExp(esc, 'gi'), m => `<mark>${m}</mark>`);
+    }
+
+    
+    function runSearch(keyword){
+      const q = keyword.trim().toLowerCase();
+      const cards = Array.from(document.querySelectorAll('[data-search]'));
+      let hits = 0;
+
+      cards.forEach(el=>{
+        const hay = el.innerText.toLowerCase();
+        if(q && hay.includes(q)){
+          el.style.display = '';
+          
+          const h3 = el.querySelector('h3'); const p = el.querySelector('p');
+          if(h3) h3.innerHTML = highlight(h3.textContent, keyword);
+          if(p)  p.innerHTML  = highlight(p.textContent,  keyword);
+          hits++;
+        }else if(q){
+          el.style.display = 'none';
+        }else{
+          
+          el.style.display = '';
+          const h3 = el.querySelector('h3'); const p = el.querySelector('p');
+          if(h3) h3.innerHTML = h3.textContent;
+          if(p)  p.innerHTML  = p.textContent;
+        }
+      });
+
+      const meta = document.getElementById('meta');
+      if(q){
+        meta.textContent = hits ? `找到 ${hits} 筆結果` : `沒有找到相關內容（零結果）`;
+      }else{
+        meta.textContent = '';
+      }
+
+      
+      if (q && typeof gtag === 'function') {
+        gtag('event', 'view_search_results', { search_term: keyword });
+        if (hits === 0) {
+          
+          gtag('event', 'search_zero_results', { search_term: keyword });
+        }
+      }
+    }
+
+    
+    document.getElementById('site-search').addEventListener('submit', function(e){
+      e.preventDefault();
+      const keyword = document.getElementById('q').value || '';
+      const url = new URL(location.href);
+      url.searchParams.set('q', keyword);
+      history.pushState({}, '', url);   
+      runSearch(keyword);
+    });
+
+   
+    const initialQ = getParam('q');
+    if(initialQ){
+      document.getElementById('q').value = initialQ;
+      runSearch(initialQ);
+    }
+  </script>
+</body>
+</html>
